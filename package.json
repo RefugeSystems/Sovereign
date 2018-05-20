@@ -1,5 +1,5 @@
 {
-  "name": "sovereign",
+  "name": "rs-sovereign",
   "version": "0.0.1",
   "description": "Track and monitor a system and its pieces",
   "main": "index.js",
@@ -24,10 +24,39 @@
   "dependencies": {
     "a-configuration": "^1.1.1",
     "bunyan": "^1.8.12",
+    "cytoscape": "^3.2.12",
+    "cytoscape-cola": "^2.2.3",
+    "d3": "^5.4.0",
+    "express": "^4.16.3",
+    "jquery": "^3.3.1",
+    "lcars-dash": "0.0.1",
     "mongodb": "^3.1.0-beta4",
+    "ng-showdown": "^1.1.0",
     "request": "^2.86.0",
     "request-promise": "^4.2.2",
     "sensor-array": "0.0.1",
+    "vue": "^2.5.16",
     "ws": "^5.1.1"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.2",
+    "grunt-concurrent": "^2.3.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-connect": "^1.0.2",
+    "grunt-contrib-less": "^1.4.1",
+    "grunt-contrib-templify": "^0.1.5",
+    "grunt-contrib-uglify": "^3.3.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-karma": "^2.0.0",
+    "grunt-mkdir": "^1.0.0",
+    "grunt-open": "^0.2.3",
+    "gruntify-eslint": "^4.0.0",
+    "jasmine": "^3.1.0",
+    "jasmine-console-reporter": "^3.0.2",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^1.1.2",
+    "karma-phantomjs-launcher": "^1.0.4",
+    "karma-spec-reporter": "0.0.32",
+    "load-grunt-tasks": "^4.0.0"
   }
 }
