@@ -1,5 +1,5 @@
 {
-  "name": "system-composite",
+  "name": "sovereign",
   "version": "0.0.1",
   "description": "Track and monitor a system and its pieces",
   "main": "index.js",
@@ -18,9 +18,9 @@
   "author": "aetherwalker@refugesystems.net",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/RefugeSystems/system-composite/issues"
+    "url": "https://github.com/RefugeSystems/sovereign/issues"
   },
-  "homepage": "https://github.com/RefugeSystems/system-composite#readme",
+  "homepage": "https://github.com/RefugeSystems/sovereign#readme",
   "dependencies": {
     "a-configuration": "^1.1.1",
     "bunyan": "^1.8.12",
