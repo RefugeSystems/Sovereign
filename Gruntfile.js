@@ -2,16 +2,14 @@ module.exports = function(grunt) {
 
 	require("load-grunt-tasks")(grunt);
 
-	grunt.loadNpmTasks("grunt-env");
-	grunt.loadNpmTasks("grunt-eslint");
+	grunt.loadNpmTasks("grunt-karma");
+	grunt.loadNpmTasks("gruntify-eslint");
 	grunt.loadNpmTasks("grunt-contrib-concat");
-	grunt.loadNpmTasks("grunt-contrib-copy");
 	grunt.loadNpmTasks("grunt-contrib-connect");
 	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-contrib-yuidoc");
-	grunt.loadNpmTasks("grunt-karma");
-
+	
 	var config = {
 		"pkg":  grunt.file.readJSON("package.json"),
 		"eslint":  {
@@ -370,32 +368,11 @@ module.exports = function(grunt) {
         }
 	};
 
-	if(process.argv.indexOf("headless") !== -1) {
-		config.karma.options.browsers = ["PhantomJS"];
-	}
-
-	if(process.argv.indexOf("add-ff") !== -1) {
-//		config.karma.options.browsers.splice(config.karma.options.browsers.indexOf("Firefox"), 1);
-		config.karma.options.browsers.push("Firefox");
-		console.log("Add firefox - ", config.karma.options.browsers);
-	}
-	
 	grunt.initConfig(config);
 	
-	grunt.registerTask("default", ["lint", "concurrent:development"]);
-
-	grunt.registerTask("lint", ["eslint:client"]);
-	grunt.registerTask("dev", ["eslint:client", "concat:clientjs", "concat:clientcs"]);
-	grunt.registerTask("prod", ["dev", "ngAnnotate:client", "uglify:client"]);
-
-	grunt.registerTask("headless", []);
-	grunt.registerTask("add-ff", []);
-
-	grunt.registerTask("local", ["default"]);
-	grunt.registerTask("document", ["eslint:client", "yuidoc", "connect:docs", "open:docs", "watch:docs"]);
-	grunt.registerTask("general", ["dev", "connect:server", "open:client", "watch:client"]);
-	grunt.registerTask("testing", ["templify:testing", "open:karma", "karma:continuous"]);
-	grunt.registerTask("test", ["eslint:client", "templify:testing", "karma:deployment"]);
+	grunt.registerTask("lint", ["eslint"]);
 	
-	grunt.registerTask("deploy", ["templify:testing", "open:karma", "karma:continuous"]);
+	grunt.registerTask("default", ["lint", "watch"]);
+
+	grunt.registerTask("test", ["lint"]);
 };
