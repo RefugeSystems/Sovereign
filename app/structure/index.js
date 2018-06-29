@@ -4,39 +4,29 @@
  * 
  * This system assumes ASCII/UTF-8 encoding for detection of '*' and '/' characters.
  * 
- * @class Design
+ * @class Structure
  * @module Documentation
  * @constructor
  * @static
  * @main
  */
-
-/* Isolate Base Variables */
 module.exports.package = require("root-require")("package.json");
-module.exports.root = require("root.json");
-var configuration = require("../config/");
+module.exports.root = require("./root.json");
+var configuration = require("a-configuration");
 var os = require("os");
 var domain = configuration.host?configuration.host.domain:undefined;
 var hostname = os.hostname() + (domain?"." + domain:"");
 
-/* Model Files => definitions */
 var glob = require("glob");
 var fs = require("fs");
+var log = configuration.systemLog;
 
-var modeled = new Promise(function(done, fail) {
-	fs.readdir("./app/models/", function(err, paths) {
-		if(err) {
-			console.log("Model Load Error: ", err, paths);
-			log.warn({"message": "Failed to build Model based definition reference: " + err.message, "stack": err.stack, "section": "swagger"});
-		} else {
-			paths.forEach(function(file) {
-				promised.push(processModelFile(file));
-			});
-			Promise.all(promised)
-			.then(done)
-			.catch(fail);
-		}
-	});
+var complete, failure;
+module.exports.models = [];
+module.exports.application = null;
+module.exports.modeled = new Promise(function(done, fail) {
+	complete = done;
+	failure = fail;
 });
 
 var processModelFile = function(file) {
@@ -49,26 +39,28 @@ var processModelFile = function(file) {
 			}
 		};
 
-		var stream = fs.createReadStream("./app/models/" + file);
+		console.log("Read File: " + file);
+//		var stream = fs.createReadStream("./app/models/" + file);
+		var stream = fs.createReadStream(file);
 		var finish = function(err) {
 			if(done) {
 				if(definition.name) {
-					if(module.exports.schemas.appending[definition.name]) {
-						if(module.exports.schemas.appending[definition.name].properties) {
-							Object.keys(module.exports.schemas.appending[definition.name].properties).forEach(function(prop) {
+					if(module.exports.root.appending[definition.name]) {
+						if(module.exports.root.appending[definition.name].properties) {
+							Object.keys(module.exports.root.appending[definition.name].properties).forEach(function(prop) {
 								definition.schema.properties[prop] = definition.schema.properties[prop] || {};
-								Object.assign(definition.schema.properties[prop], module.exports.schemas.appending[definition.name].properties[prop]);
+								Object.assign(definition.schema.properties[prop], module.exports.root.appending[definition.name].properties[prop]);
 							});
 						}
-						delete(module.exports.schemas.appending[definition.name].properties);
-						delete(module.exports.schemas.appending[definition.name].name);
-						Object.assign(definition.schema, module.exports.schemas.appending[definition.name]);
+						delete(module.exports.root.appending[definition.name].properties);
+						delete(module.exports.root.appending[definition.name].name);
+						Object.assign(definition.schema, module.exports.root.appending[definition.name]);
 					}
-					models.push(definition);
+					module.exports.models.push(definition);
 				}
 				done();
 				if(err) {
-					log.warn({"message": "Failed to process model: " + err.message, "stack": err.stack, "section": "swagger"});
+					log.warn({"message": "Failed to process model: " + err.message, "stack": err.stack, "section": "swagger", "file": file});
 				}
 				done = false;
 			}
@@ -184,27 +176,23 @@ var processModelFile = function(file) {
 	});
 };
 
-var getJIRAComponent = function(name) {
-	if(module.exports.package.docsJiraName) {
-		return module.exports.package.docsJiraName;
-	}
-	
-	try {
-		name = name.split("-");
-		name[1] = name[1].replace(/([a-z])([A-Z])/g,"$1 $2");
-		return name[0] + " - " + name[1];
-	} catch(ignored) {
-		return name.replace;
-	}
-};
-
-var getJIRAComponentSearch = function(name) {
-	name = getJIRAComponent(name);
-	return "https://jira.it.ohio-state.edu/issues/?jql=project%3Dlsid%20and%20sprint%20in%20openSprints()%20and%20component%20%3D%20%22" + name.replace(/ /ig, "%20") + "%22%20";
-};
-
 module.exports.defineApp = function(app) {
-	module.exports.application = application = app;
+	module.exports.application = app;
+	var promised = [];
+//	fs.readdir("./app/models/", function(err, paths) {
+	glob("./app/**/*.js", function(err, paths) {
+		if(err) {
+			console.log("Model Load Error: ", err, paths);
+			log.warn({"message": "Failed to build Model based definition reference: " + err.message, "stack": err.stack, "section": "swagger"});
+		} else {
+			paths.forEach(function(file) {
+				promised.push(processModelFile(file));
+			});
+			Promise.all(promised)
+			.then(complete)
+			.catch(failure);
+		}
+	});
 };
 
 /**
@@ -214,19 +202,15 @@ module.exports.defineApp = function(app) {
  */
 module.exports.formBase = function() {
 	return new Promise(function(done) {
-		var jira, base = {
+		var base = {
 			"swagger": "2.0",
 			"info": {
 				"title": module.exports.package.name,
 				"description": module.exports.package.description,
 				"version": module.exports.package.version,
-				"termsOfService": "https://alpha.osu.edu/terms",
-				"license": {
-					"name": "Microservice Core V" + module.exports.package.microserviceCore.version,
-					"url": "https://repo.it.ohio-state.edu/core-development/Microservice-Core/tags/" + module.exports.package.microserviceCore.version
-				},
+				"termsOfService": "https://refugesystems.net/sovereign/terms",
 				"contact": {
-					"email": "odee-lsi-developers@osu.edu"
+					"email": "administrator@refugesystems.net"
 				}
 			},
 			"host": hostname,
@@ -238,24 +222,19 @@ module.exports.formBase = function() {
 			"options": {},
 			"definitions": {},
 			"externalDocs": {
-				"name": "Alpha Code Documentation",
-				"url": "http://alpha-docs.it.ohio-state.edu/part/" + (module.exports.package.docsAlphaName || module.exports.package.name) + "/docs/"
+				"name": "Sovereign",
+				"url": "https://refugesystems.net/sovereign/docs"
 			}
 		};
-
-		base.info.description = base.info.description || "";
-		jira = getJIRAComponentSearch(module.exports.package.name);
-		base.info.description += "\n\n[JIRA Component](" + jira + ")";
-		base.info.description += "\n\n[Repository](" + (module.exports.package.homepage || "https://repo.it.ohio-state.edu/odee-developers/" + (module.exports.package.docsAlphaName || module.exports.package.name)) + ")";
 		
-		if(configuration.listen) {
+		if(configuration.server.http) {
 			base.schemes.push("http");
-			base.host += ":" + configuration.listen;
+			base.host += ":" + configuration.server.http.port;
 		}
 
-		if(configuration.secure) {
+		if(configuration.server.https) {
 			base.schemes.push("https");
-			base.host += ":" + configuration.secure.listen;
+			base.host += ":" + configuration.server.https.port;
 		}
 
 		done(base);
@@ -272,11 +251,9 @@ module.exports.getDefinitions = function(base) {
 		base = base || {};
 		base.definitions = base.definitions || {};
 
-		models.forEach(function(model) {
+		module.exports.models.forEach(function(model) {
 			base.definitions[model.name] = model.schema;
 		});
-
-
 
 		done(base);
 	});
@@ -322,16 +299,9 @@ module.exports.getPaths = function(base) {
 
 				parameters.push({
 					"in": "header",
-					"name": "requestid",
+					"name": "rsid",
 					"description": "Identifier for the request",
-					"default": "TestRequest#0",
-					"type": "string"
-				});
-				parameters.push({
-					"in": "header",
-					"name": "x-alpha-session",
-					"default": base.options.session || "{\"agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36\",\"DisplayName\":\"Test User\",\"lastname\":\"User\",\"srcip\":\"0.0.0.0\",\"Username\":\"user.0\",\"appOrigin\":\"https://utopia.it.ohio-state.edu/\",\"appContext\":\"No Where\",\"discussion\":\"SomeDiscussionID\",\"EPPN\":\"10000000\",\"EMPLID\":\"10000000\",\"authInitiated\":\"1520427020977\",\"dateAuthorized\":\"1520427020978\",\"handler\":\"distopia01.it.ohio-state.edu\",\"firstname\":\"Test\",\"IDMID\":\"IDM000000000\",\"requestid\":\"FirstRequestID\",\"previous\":\"distopia01.it.ohio-state.edu\",\"type\":\"test\",\"currentip\":\"0.0.0.1\",\"permissions\":{\"routing\":false},\"loaded\":1520435689756}",
-					"description": "JSON for the session, typically received from the MSB during routing",
+					"default": undefined,
 					"type": "string"
 				});
 
@@ -357,47 +327,26 @@ module.exports.getPaths = function(base) {
 					base.paths[path][method] = base.paths[path][method] || {};
 					Object.assign(base.paths[path][method], index);
 				});
-
-				if(module.exports.service.swagger.paths[path]) {
-					if(module.exports.service.swagger.paths[path].delete) {
+				if(module.exports.root.paths[path]) {
+					if(module.exports.root.paths[path].delete) {
 						// For removing badly generated paths, should be rare
 						delete(base.paths[path]);
 					} else {
-						Object.keys(module.exports.service.swagger.paths[path]).forEach(function(method) {
+						Object.keys(module.exports.root.paths[path]).forEach(function(method) {
 							if(method === "*") {
 								Object.keys(base.paths[path]).forEach(function(k) {
-									Object.assign(base.paths[path][k], module.exports.service.swagger.paths[path][method]);
+									Object.assign(base.paths[path][k], module.exports.root.paths[path][method]);
 								});
 							} else {
 								base.paths[path][method] = base.paths[path][method] || {};
-								Object.assign(base.paths[path][method], module.exports.service.swagger.paths[path][method]);
+								Object.assign(base.paths[path][method], module.exports.root.paths[path][method]);
 							}
-							if(module.exports.service.swagger.paths[path][method].parameters) {
-								base.paths[path][method].parameters = index.parameters.concat(module.exports.service.swagger.paths[path][method].parameters);
-							}
-						});
-					}
-				}
-				if(module.exports.core.paths[path]) {
-					if(module.exports.core.paths[path].delete) {
-						// For removing badly generated paths, should be rare
-						delete(base.paths[path]);
-					} else {
-						Object.keys(module.exports.core.paths[path]).forEach(function(method) {
-							if(method === "*") {
-								Object.keys(base.paths[path]).forEach(function(k) {
-									Object.assign(base.paths[path][k], module.exports.core.paths[path][method]);
-								});
-							} else {
-								base.paths[path][method] = base.paths[path][method] || {};
-								Object.assign(base.paths[path][method], module.exports.core.paths[path][method]);
-							}
-							if(module.exports.service.swagger.paths[path]) {
-								if(module.exports.service.swagger.paths[path][method].parameters) {
-									base.paths[path][method].parameters = index.parameters.concat(module.exports.service.swagger.paths[path][method].parameters);
+							if(module.exports.root.swagger.paths[path]) {
+								if(module.exports.root.swagger.paths[path][method].parameters) {
+									base.paths[path][method].parameters = index.parameters.concat(module.exports.root.swagger.paths[path][method].parameters);
 								}
-								if(module.exports.service.swagger.paths[path][method].responses) {
-									Object.assign(base.paths[path][method].responses, index.responses, module.exports.service.swagger.paths[path][method].responses);
+								if(module.exports.root.swagger.paths[path][method].responses) {
+									Object.assign(base.paths[path][method].responses, index.responses, module.exports.root.swagger.paths[path][method].responses);
 								}
 							}
 						});
@@ -407,7 +356,7 @@ module.exports.getPaths = function(base) {
 			return path;
 		};
 
-		application._router.stack.forEach(function(router) {
+		module.exports.application._router.stack.forEach(function(router) {
 			buildPath("", router);
 		});
 
@@ -468,7 +417,3 @@ var cleanRouteRegex = function(object) {
 	}
 	return path;
 };
-
-modeled
-.then(complete)
-.catch(failure);

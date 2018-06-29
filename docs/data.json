@@ -1,0 +1,361 @@
+{
+    "project": {
+        "name": "rs-sovereign",
+        "description": "Track and monitor a system and its pieces",
+        "version": "0.0.1",
+        "url": "https://github.com/RefugeSystems/sovereign#readme"
+    },
+    "files": {
+        "app\\client\\index.js": {
+            "name": "app\\client\\index.js",
+            "modules": {},
+            "classes": {
+                "Client": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\structure\\index.js": {
+            "name": "app\\structure\\index.js",
+            "modules": {
+                "Documentation": 1
+            },
+            "classes": {
+                "Structure": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\utilities\\random.js": {
+            "name": "app\\utilities\\random.js",
+            "modules": {
+                "Utility": 1
+            },
+            "classes": {
+                "Random": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\sovereign.js": {
+            "name": "app\\sovereign.js",
+            "modules": {},
+            "classes": {
+                "Sovereign": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {
+        "Documentation": {
+            "name": "Documentation",
+            "submodules": {},
+            "elements": {},
+            "classes": {
+                "Client": 1,
+                "Structure": 1
+            },
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "app\\structure\\index.js",
+            "line": 2,
+            "description": "This class handles generating documentation for REST requests.\n\nThis system assumes ASCII/UTF-8 encoding for detection of '*' and '/' characters."
+        },
+        "Utility": {
+            "name": "Utility",
+            "submodules": {},
+            "elements": {},
+            "classes": {
+                "Random": 1,
+                "Sovereign": 1
+            },
+            "fors": {},
+            "namespaces": {},
+            "tag": "module",
+            "file": "app\\sovereign.js",
+            "line": 8,
+            "description": "Provides a suite of functions for generating random data."
+        }
+    },
+    "classes": {
+        "Client": {
+            "name": "Client",
+            "shortname": "Client",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\client\\index.js",
+            "line": 5,
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "connection",
+                    "description": "",
+                    "type": "WebSocket"
+                },
+                {
+                    "name": "configuration",
+                    "description": "",
+                    "type": "Object"
+                }
+            ]
+        },
+        "Structure": {
+            "name": "Structure",
+            "shortname": "Structure",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\structure\\index.js",
+            "line": 2,
+            "description": "This class handles generating documentation for REST requests.\n\nThis system assumes ASCII/UTF-8 encoding for detection of '*' and '/' characters.",
+            "is_constructor": 1,
+            "static": 1,
+            "mainName": "",
+            "tag": "main",
+            "itemtype": "main",
+            "_main": true
+        },
+        "Random": {
+            "name": "Random",
+            "shortname": "Random",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Utility",
+            "namespace": "",
+            "file": "app\\utilities\\random.js",
+            "line": 3,
+            "description": "Provides a suite of functions for generating random data.",
+            "is_constructor": 1,
+            "static": 1
+        },
+        "Sovereign": {
+            "name": "Sovereign",
+            "shortname": "Sovereign",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Utility",
+            "namespace": "",
+            "file": "app\\sovereign.js",
+            "line": 8,
+            "is_constructor": 1,
+            "params": [
+                {
+                    "name": "Configuration",
+                    "description": "",
+                    "type": "Object"
+                }
+            ]
+        }
+    },
+    "elements": {},
+    "classitems": [
+        {
+            "file": "app\\client\\index.js",
+            "line": 23,
+            "itemtype": "property",
+            "name": "constructs",
+            "type": "Object",
+            "class": "Client"
+        },
+        {
+            "file": "app\\client\\index.js",
+            "line": 30,
+            "itemtype": "method",
+            "name": "send",
+            "params": [
+                {
+                    "name": "data",
+                    "description": "Object to send",
+                    "type": "Object | Array"
+                }
+            ],
+            "class": "Client"
+        },
+        {
+            "file": "app\\client\\index.js",
+            "line": 87,
+            "itemtype": "method",
+            "name": "close",
+            "class": "Client"
+        },
+        {
+            "file": "app\\structure\\index.js",
+            "line": 198,
+            "itemtype": "method",
+            "name": "formBase",
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "class": "Structure",
+            "module": "Documentation"
+        },
+        {
+            "file": "app\\structure\\index.js",
+            "line": 244,
+            "itemtype": "method",
+            "name": "getDefinitions",
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "class": "Structure",
+            "module": "Documentation"
+        },
+        {
+            "file": "app\\structure\\index.js",
+            "line": 262,
+            "description": "Leverages the Express Application defined with \"defineApp\" to generate base route information\npassed on defined paths. Support for properties such as parameters and regex inside the route\nare pending (If determined to be needed).",
+            "itemtype": "method",
+            "name": "getPaths",
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "class": "Structure",
+            "module": "Documentation"
+        },
+        {
+            "file": "app\\structure\\index.js",
+            "line": 376,
+            "itemtype": "method",
+            "name": "getDiscrete",
+            "params": [
+                {
+                    "name": "paths",
+                    "description": "",
+                    "type": "Array | String"
+                }
+            ],
+            "return": {
+                "description": "\\",
+                "type": "Promise"
+            },
+            "class": "Structure",
+            "module": "Documentation"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 12,
+            "description": "Quick reference array for generating random strings",
+            "access": "private",
+            "tagname": "",
+            "itemtype": "property",
+            "name": "alphanumeric",
+            "type": "String[]",
+            "class": "Random",
+            "module": "Utility"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 20,
+            "description": "For practicality within the purposes of this library, a set of primes is provided for guaranteeing uniqueness\nbut not to the extent of providing security.",
+            "type": "Number ~ Array",
+            "itemtype": "property",
+            "name": "primes",
+            "access": "private",
+            "tagname": "",
+            "class": "Random",
+            "module": "Utility"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 1029,
+            "description": "<p>Method for getting a random floating point number x | min <= x < min + range</p>\n<p>As an example, random(5) will yield a number between 0 and 5 where as\nrandom(5,5) will yield a number between 5 and 10.<p>",
+            "itemtype": "method",
+            "name": "number",
+            "params": [
+                {
+                    "name": "range",
+                    "description": "The \"width\" of the range of numbers desired.",
+                    "type": "Number"
+                },
+                {
+                    "name": "min",
+                    "description": "The minimum number desired.",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "A random number.",
+                "type": "Number"
+            },
+            "class": "Random",
+            "module": "Utility"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 1045,
+            "description": "<p>Method for getting a random integer x | min <= x < min + range</p>\n<p>As an example, random(5) will yield a number between 0 and 4 where as\nrandom(5,5) will yield a number between 5 and 9.<p>",
+            "itemtype": "method",
+            "name": "integer",
+            "params": [
+                {
+                    "name": "range",
+                    "description": "The \"width\" of the range of numbers desired.",
+                    "type": "Number"
+                },
+                {
+                    "name": "min",
+                    "description": "The minimum number desired.",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "A random number.",
+                "type": "Number"
+            },
+            "class": "Random",
+            "module": "Utility"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 1061,
+            "description": "Get a random alphanumeric string (ie. matches pattern ^[a-zA-Z0-9]*$.",
+            "itemtype": "method",
+            "name": "string",
+            "params": [
+                {
+                    "name": "len",
+                    "description": "The desired length for the returned String.",
+                    "type": "Number"
+                }
+            ],
+            "return": {
+                "description": "A random alphanumeric string",
+                "type": "String"
+            },
+            "class": "Random",
+            "module": "Utility"
+        },
+        {
+            "file": "app\\utilities\\random.js",
+            "line": 1079,
+            "description": "<p>Returns a prime from a list generated from Java's Math lib</p>",
+            "itemtype": "method",
+            "name": "prime",
+            "return": {
+                "description": "A random prime number.",
+                "type": "Number"
+            },
+            "class": "Random",
+            "module": "Utility"
+        }
+    ],
+    "warnings": []
+}

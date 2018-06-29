@@ -22,16 +22,24 @@ module.exports = function(grunt) {
 				"globals":  [
 					"sessionStorage",
 					"localStorage",
+					"_gazeVersion",
+					"FileReader",
 					"cytoscape",
-					"window",
 					"location",
 					"document",
 					"angular",
+					"Promise",
+					"global",
+					"window",
 					"inject",
 					"module",
+					"Gaze",
 					"cola",
-					"$",
-					"d3"
+					"atob",
+					"btoa",
+					"Vue",
+					"d3",
+					"$"
 				],
 				"rules":  {
 					"eqeqeq":  0,
@@ -62,10 +70,9 @@ module.exports = function(grunt) {
 				},
 				"envs":  ["browser", "node", "jasmine"]
 			},
-			"client":  ["client/scripts/**/*.js",
-			         "suites/integration/**/*.js",
-			         "suites/unit/**/*.js",
-			         "suites/functional/**/*.js"]
+			"app":  ["client/**/*.js",
+			         "spec/**/*.js",
+			         "app/**/*.js"]
 		},
 		"concat":  {
 			"clientjs":  {
@@ -196,9 +203,12 @@ module.exports = function(grunt) {
 				"files":  ["client/scripts/**/*.js", "client/styles/**/*.css", "client/**/*.html", "client/*.html"],
 				"tasks":  ["dev"]
 			},
+			"unit-tests": {
+				
+			},
 			"docs":  {
-				"files":  ["client/scripts/**/*.js", "client/styles/**/*.css", "client/**/*.html", "client/*.html"],
-				"tasks":  ["yuidoc"]
+				"files":  ["app/**/*.js", "client/**/*.js"],
+				"tasks":  ["eslint:app","yuidoc"]
 			}
 		},
 		"uglify":  {
@@ -347,7 +357,7 @@ module.exports = function(grunt) {
 				"version":  "<%= pkg.version %>",
 				"url":  "<%= pkg.homepage %>",
 				"options":  {
-					"paths":  ["./client/scripts/"],
+					"paths":  ["./client", "./app"],
 					"outdir":  "./docs",
 					"exclude":  "**/angular.js, **/jquery.js",
 					"markdown":  true
@@ -370,7 +380,7 @@ module.exports = function(grunt) {
 
 	grunt.initConfig(config);
 	
-	grunt.registerTask("lint", ["eslint"]);
+	grunt.registerTask("lint", ["eslint:app", "watch:docs"]);
 	
 	grunt.registerTask("default", ["lint", "watch"]);
 

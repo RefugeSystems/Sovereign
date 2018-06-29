@@ -1,71 +1,93 @@
-/*
 
-var test = new WebSocket("ws://localhost:3000/connect");
-test.onerror = function(error) {console.log("Err: ", error);};
-test.onmessage = function(data) {console.log("Data: ", data);};
-test.onclose = function(code) {console.log("Code: ", code);};
+var Configuration = require("a-configuration");
+var StructureRouter = require("./structure/routing");
+var Structure = require("./structure");
+var Sovereign = require("./sovereign");
 
- */
-
-
-var configuration = require("a-configuration");
-
-var onError = function(error) {
-	switch(error.code) {
-		case "EACCES":
-			console.log(configuration.server.port + " requires elevated privileges");
-			process.exit(1);
-			break;
-		case "EADDRINUSE":
-			console.log(configuration.server.port + " is already in use");
-			process.exit(1);
-			break;
-		default:
-			console.log("Errored: ", error);
-			throw error;
-	}
+var onError = function(options) {
+	return function(error) {
+		switch(error.code) {
+			case "EACCES":
+				console.log(options.port + " requires elevated privileges");
+				process.exit(1);
+				break;
+			case "EADDRINUSE":
+				console.log(options.port + " is already in use");
+				process.exit(1);
+				break;
+			default:
+				console.log("Errored: ", error);
+				throw error;
+		}
+	};
 };
 
-var onListening = function() {
-	console.log("Listening on port " + configuration.server.port);
+var onListening = function(options) {
+	return function() {
+		console.log("Listening on port " + options.port);
+	};
 };
 
-configuration
+Configuration
 ._await
 .then(function() {
+	var sovereign = new Sovereign(Configuration);
+	var log = Configuration.systemLog;
+	
 	var x, csp = "default-src 'self'";
-	for(x=0; x<configuration.domains.length; x++) {
-		csp += " https://" + configuration.domains[x];
-		csp += " http://" + configuration.domains[x];
-		csp += " wss://" + configuration.domains[x];
-		csp += " ws://" + configuration.domains[x];
+	for(x=0; x<Configuration.domains.length; x++) {
+		csp += " https://" + Configuration.domains[x];
+		csp += " http://" + Configuration.domains[x];
+		csp += " wss://" + Configuration.domains[x];
+		csp += " ws://" + Configuration.domains[x];
 	}
+	
+	Configuration.synthetic = Configuration.synthetic || {};
+	Configuration.synthetic.general = Configuration.synthetic.general || {};
 	
 	var bodyParser = require("body-parser");
 	var express = require("express");
 	var WebSocket = require("ws");
 	var https = require("https");
 	var http = require("http");
-	var util = require("util");
 	var url = require("url");
 	var fs = require("fs");
 
 	var server = express();
 	server.use(bodyParser.json());
 	server.use(bodyParser.urlencoded({ extended: false }));
+	
 //	server.use("/tower/auth", authentication);
+	
 	server.use(function(req, res, next) {
 		res.setHeader("Content-Security-Policy", csp);
+		log.debug({"req": req}, "Request Received");
 		next();
 	});
-	server.all("/ping", function(req,res) {
-		console.log("ping");
-		emit("ping", Object.assign({}, req.query, req.params, req.body));
+	
+	server.get("/ping", function(req,res) {
+		sovereign.ping(req.body);
 		res.json({"status": 0, "message": "Pinged"});
 	});
+	
+	server.use("/structure", StructureRouter);
+	
+	server.use(function(req, res, next) {
+		next(new Error("Location not found: " + req.url));
+	});
+	
+	server.use(function(error, req, res, next) {
+		log.error({"req": req, "error": error, "stack": error.stack}, "Request Encountered an unhandled error: " + error.message);
+		res.status(error.status || 500);
+		res.json({
+			"message": "Encountered an Error",
+			"error": error.message
+		});
+	});
+	
 
-	var key = fs.readFileSync(configuration.server.key || "/opt/ssl-tower.key", "utf-8");
-	var crt = fs.readFileSync(configuration.server.crt || "/opt/ssl-tower.crt", "utf-8");
+	var key = fs.readFileSync(Configuration.server.key || "/opt/ssl-tower.key", "utf-8");
+	var crt = fs.readFileSync(Configuration.server.crt || "/opt/ssl-tower.crt", "utf-8");
 
 	var opened = http.createServer(server);
 	var secure = https.createServer({
@@ -73,90 +95,27 @@ configuration
 		"cert": crt 
 	}, server);
 	
-	
-	var listeners = [];
-	var index, id = 0;
-	
-	var emit = function(key, data) {
-		for(index=0; index<listeners.length; index++)
-			try {
-				listeners[index].event(key, data);
-			} catch(ex) {
-				listeners.splice(index--, 1);
-			}
-	};
-	
-	var Connective = function(socket) {
-		var connective = this;
-		this.id = id++;
-		
-		this.send = function(data) {
-			socket.send(data);
-		};
-		
-		var receive = function(data) {
-			console.log("Listener[" + connective.id + "]: " + data);
-		};
-		
-		var errored = function(error) {
-			console.log("Dropped Listener: " + connective.id);
-			listeners.splice(listeners.indexOf(connective), 1);
-		};
-		
-		socket.on("message", receive);
-		
-		this.event = function(key, data) {
-			console.log("Event[" + connective.id + "]@" + key);
-			socket.send(JSON.stringify({
-				"event": key,
-				"data": data
-			}));
-		};
-		
-		socket.onerror = errored;
-		
-		console.log("Listener created: " + id);
-	};
-	
 	var socketserver = new WebSocket.Server({"server": opened});
-	socketserver.on("connection", function(ws, req) {
+	socketserver.on("connection", function(connection, req) {
 		var location = url.parse(req.url, true);
-//		console.log("Socket Location: " + location.path);
-		
 		if(location.path === "/connect") {
-			listeners.push(new Connective(ws));
+			connection.host = req.ip;
+			if(req.session) {
+				connection.name = req.session.name;
+			} else {
+				connection.name = "no-session";
+			}
+			sovereign.client(connection);
 		}
 	});
 	
-	socketserver.on("close", function(ws, req) {
-		console.log("Socket Server Closed: ", ws, req);
-	});
-	
-	socketserver.on("open", function(ws, req) {
-		console.log("Socket Server Open: ", ws, req);
-	});
-	
-	socketserver.on("mount", function(ws, req) {
-		console.log("Socket Server Mount: ", ws, req);
-	});
-	
-	socketserver.on("listening", function(ws, req) {
-		console.log("Socket Server Listening");
-	});
-	
-	socketserver.on("upgrade", function(ws, req) {
-		console.log("Socket Server Upgrade: ", ws, req);
-	});
-	
-	socketserver.on("error", function(ws, req) {
-		console.log("Socket Server Error: ", ws, req);
-	});
+	secure.on("error", onError(Configuration.server.https));
+	secure.on("listening", onListening(Configuration.server.https));
+	secure.listen(Configuration.server.https.port);
 
-	secure.on("error", onError);
-	secure.on("listening", onListening);
-	secure.listen(3100);
-
-	opened.on("error", onError);
-	opened.on("listening", onListening);
-	opened.listen(3000);
+	opened.on("error", onError(Configuration.server.http));
+	opened.on("listening", onListening(Configuration.server.http));
+	opened.listen(Configuration.server.http.port);
+	
+	Structure.defineApp(server);
 });

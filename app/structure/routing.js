@@ -1,14 +1,15 @@
 
-var design = require("./index");
+var express = require("express");
+var structure = require("./index");
+module.exports = express.Router();
 
-var success= function(req, next) {
+var success= function(res) {
 	return function(result) {
-		req.result = result;
-		next();
+		res.json(result);
 	};
 };
 
-module.exports.general = function(req, res, next) {
+module.exports.get("/", function(req, res, next) {
 	if(req.query.search) {
 		req.body = req.body || {};
 		try {
@@ -18,37 +19,37 @@ module.exports.general = function(req, res, next) {
 		}
 	}
 	
-	design.ready
-	.then(design.formBase)
-	.then(design.addOptions(req.query))
-	.then(design.getDefinitions)
-	.then(design.getPaths)
-	.then(design.getDiscrete(req.params.path || req.body.paths))
-	.then(success(req, next))
+	structure.modeled
+	.then(structure.formBase)
+	.then(structure.addOptions(req.query))
+	.then(structure.getDefinitions)
+	.then(structure.getPaths)
+	.then(structure.getDiscrete(req.params.path || req.body.paths))
+	.then(success(res))
 	.catch(next);
-};
+});
 
-module.exports.base = function(req, res, next) {
-	design.ready
-	.then(design.formBase)
-	.then(success(req, next))
+module.exports.get("/base", function(req, res, next) {
+	structure.ready
+	.then(structure.formBase)
+	.then(success(res))
 	.catch(next);
-};
+});
 
-module.exports.definitions = function(req, res, next) {
-	design.ready
-	.then(design.getDefinitions)
-	.then(success(req, next))
+module.exports.get("/definitions", function(req, res, next) {
+	structure.ready
+	.then(structure.getDefinitions)
+	.then(success(res))
 	.catch(next);
-};
+});
 
-module.exports.routes = function(req, res, next) {
-	design.ready
-	.then(design.getPaths)
-	.then(success(req, next))
+module.exports.get("/routes", function(req, res, next) {
+	structure.ready
+	.then(structure.getPaths)
+	.then(success(res))
 	.catch(next);
-};
+});
 
-module.exports.generate = function(req, res, next) {
+module.exports.get("/generate", function(req, res, next) {
 	next(new Error("Not yet implemented"));
-};
+});
