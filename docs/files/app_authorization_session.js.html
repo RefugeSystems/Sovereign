@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>app\sovereign.js - rs-sovereign</title>
+    <title>app\authorization\session.js - rs-sovereign</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -86,142 +86,100 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: app\sovereign.js</h1>
+<h1 class="file-heading">File: app\authorization\session.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
 
-//var Synthesis = require(&quot;rs-synthesis&quot;);
 //var Random = require(&quot;rs-random&quot;);
-var Synthesis = require(&quot;../../Synthesis/&quot;);
-var Random = require(&quot;../../Random/&quot;);
-var Client = require(&quot;./client&quot;);
-var Package = require(&quot;../package.json&quot;);
+var Random = require(&quot;../../../Random/&quot;);
 
 /**
  * 
- * @class Sovereign
+ * @class Session
  * @constructor
- * @param {Object} Configuration
  */
-module.exports = function(Configuration) {
-	var sovereign = this;
+module.exports = function(source) {
+	var x;
 	
-	var start = Date.now();
-	var general = this.general = new Synthesis(Configuration.synthesis);
-	general.setMaxListeners(2);
+	this.name = source.name || Random.identifier(&quot;session&quot;, 5, 16);
+	this.username = source.username;
+	this.display = source.display;
+	this.established = Date.now();
+	this.last = this.established;
 	
-	var clients = {};
-	
-	this.client = function(connection) {
-		var client = new Client(Random.identifier(&quot;client&quot;, 10, 32), connection, sovereign);
-		clients[client.id.code] = client;
-		client.on(&quot;create&quot;, clientCreate);
-		client.on(&quot;repeat&quot;, clientRepeat);
-		client.on(&quot;close&quot;, this.disconnect);
-		console.log(&quot;Client Created: &quot; + client.id.code);
-	};
-	
-	
-	this.ping = function(ball) {
-		var x, notify = Object.keys(clients);
-		for(x=0; x&lt;notify.length; x++) {
-			console.log(&quot;Pong to &quot; + notify[x]);
-			clients[notify[x]].send(&quot;pong&quot;, ball);
-		}
-	};
-	
-	
-	
-	this.constructs = function(constructs) {
-		console.log(&quot;General Construct: &quot;, constructs);
-		if(!constructs) {
-			throw new Error(&quot;No Constructs passed&quot;);
-		}
-		return general.retrieveConstructs(constructs);
-	};
-	
-	
-	this.disconnect = function(client) {
-		delete(clients[client.id.code]);
-		console.log(&quot;Client Disconnected: &quot; + client.id.code + (client.closure.message?&quot; - For Cause: &quot; + client.closure.message:&quot;&quot;));
-	};
-	
-	
-	var events = {
-		&quot;general&quot;: [&quot;general&quot;,
-			&quot;resource:create&quot;,
-			&quot;resource:repeat&quot;,
-			&quot;resource:remove&quot;,
-			&quot;relation:create&quot;,
-			&quot;relation:repeat&quot;,
-			&quot;relation:remove&quot;]
-	};
-	
-	
-	this.status = function() {
-		var e, synthesis = {
-			&quot;general&quot;: {
-				&quot;listeners&quot;: {
-				}
+	/**
+	 * Uses keys to maps operation names to secondary Objects that map
+	 * clearance strings to their Integer values for this session.
+	 * 
+	 * Currently a clearance of 0 or undefined yields access denied, while
+	 * any other value for clearance should be considered allowed.
+	 * 
+	 * If authorizations is the literal value &quot;true&quot;, then the Session is
+	 * considered to be allowed to perform all operations without question.
+	 * 
+	 * @property authorizations
+	 * @type Object | Boolean
+	 * @default {}
+	 */
+	var authorizations = {};
+	if(source.authorizations) {
+		if(source.authorizations.constructor.name === &quot;Array&quot;) {
+			for(x=0; x&lt;source.authorizations; x++) {
+				Object.assign(authorizations, source.authorizations[x]);
 			}
-		};
-		
-		for(e=0; e&lt;events.length; e++) {
-			synthesis.general.listeners[events[e]] = general.listenerCount(events[e]);
+		} else if(source.authorizations.constructor.name === &quot;Object&quot;) {
+			Object.assign(authorizations, source.authorizations);
+		} else {
+			authorizations = source.authorizations; 
 		}
-		
-		return {
-			&quot;service&quot;: {
-				&quot;uptime&quot;: Date.now() - start,
-				&quot;version&quot;: Package.version
-			},
-			&quot;construct&quot;: synthesis
-		};
-	};
+	}
 	
-	
-	var clientCreate = function(event) {
-		var x;
-		/* TODO : Wait for Resources to create to get IDs and then fill in
-		 * the IDs by name in relations BEFORE passing relations for creation
-		 * so that we prioritize filling in ambiguous names with resources that
-		 * were identified in this event to fulfill cases of ambiguous names
-		 * with some priority.
-		 * 
-		 * Otherwise the creation process will find the first resource of the
-		 * given name for relationships where no ID is specified (See &quot;soruceName&quot;
-		 * and &quot;targetName&quot;).
-		 */
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Create Resource: &quot;, JSON.stringify(event.resources[x], null, 4));
-				general.createResource(event.resources[x]);
-			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
+	/**
+	 * 
+	 * @method authorization
+	 * @param {Object} opSet Maps operations to access clearance for this session.
+	 */
+	this.authorization = function(opSet) {
+		if(opSet.constructor.name === &quot;Object&quot;) {
+			authorizations = opSet.clone();
+		} else if(opSet === true) {
+			authorizations = true;
 		}
 	};
 	
+	/**
+	 * 
+	 * @method authorized
+	 * @param {String} operation
+	 * @param {String} clearance
+	 * @return {Integer} 
+	 */
+	var authoized = this.authorized = function(operation, clearance) {
+		if(authorizations === true || authorizations[operation] &amp;&amp; authorizations[operation][clearance]) {
+			var result = parseInt(authorizations[operation][clearance]);
+			return isNaN(result)?0:result;
+		}
+
+		return 0;
+	};
 	
-	var clientRepeat = function(event) {
-		var x;
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Emit Resource: &quot; + event.resources[x]);
-				general.repeatResource(event.resources[x]);
+	/**
+	 * Used for checking authorization in promise chains where the operation
+	 * and clearance are properties of the object being passed down the chain.
+	 * @method checkAuthorization
+	 * @param {String} operation
+	 * @param {String} clearance
+	 * @return {Promise} 
+	 */
+	this.checkAuthorization = function(chain) {
+		return new Promise(function(done, fail) {
+			if(authoized(chain.operation, chain.clearance)) {
+				done(chain);
+			} else {
+				fail(new Error(&quot;Access denied by authorization restrictions&quot;));
 			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
-		}
+		});
 	};
 };
 

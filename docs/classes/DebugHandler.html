@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Client - rs-sovereign</title>
+    <title>DebugHandler - rs-sovereign</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -86,12 +86,15 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1>Client Class</h1>
+<h1>DebugHandler Class</h1>
 <div class="box meta">
 
+        <div class="extends">
+            Extends <a href="../classes/SessionHandler.html" class="crosslink">SessionHandler</a>
+        </div>
 
         <div class="foundat">
-            Defined in: <a href="../files/app_client_index.js.html#l5"><code>app\client\index.js:5</code></a>
+            Defined in: <a href="../files/app_authorization_debug-handler.js.html#l6"><code>app\authorization\debug-handler.js:6</code></a>
         </div>
 
             Module: <a href="../modules/Documentation.html">Documentation</a>
@@ -100,21 +103,25 @@
 
 
 <div class="box intro">
-    
+    <p>A special handler that succeeds all requests with a default generic session.</p>
+<p>The default generic session has administrative privileges but options can set the authorizations that
+should be established.</p>
+<p>The &quot;name&quot; for the session is always &quot;debugging#&quot; and then the instance number for the session. This is
+constant for log searching.</p>
+<p>Useful for development and debugging.</p>
+<p>Configuration: 'debug-handler'</p>
+
 </div>
 
     <div class="constructor">
         <h2>Constructor</h2>
-<div id="method_Client" class="method item">
-    <h3 class="name"><code>Client</code></h3>
+<div id="method_DebugHandler" class="method item">
+    <h3 class="name"><code>DebugHandler</code></h3>
 
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
                 <li class="arg">
-                        <code>connection</code>
-                </li>
-                <li class="arg">
-                        <code>configuration</code>
+                        <code>options</code>
                 </li>
             </ul><span class="paren">)</span>
         </div>
@@ -129,7 +136,7 @@
     <div class="meta">
                 <p>
                 Defined in
-        <a href="../files/app_client_index.js.html#l5"><code>app\client\index.js:5</code></a>
+        <a href="../files/app_authorization_debug-handler.js.html#l6"><code>app\authorization\debug-handler.js:6</code></a>
         </p>
 
 
@@ -145,22 +152,18 @@
 
             <ul class="params-list">
                 <li class="param">
-                        <code class="param-name">connection</code>
-                        <span class="type">WebSocket</span>
-
-
-                    <div class="param-description">
-                         
-                    </div>
-
-                </li>
-                <li class="param">
-                        <code class="param-name">configuration</code>
+                        <code class="param-name">options</code>
                         <span class="type">Object</span>
 
 
                     <div class="param-description">
-                         
+                        <p>Uses:</p>
+<ul>
+<li>display {String} : Display name for the session</li>
+<li>username {String} : Username for the session</li>
+<li>options.authorizations {Object} : Sets the authorizations for the session, defaults to true</li>
+</ul>
+
                     </div>
 
                 </li>
@@ -177,7 +180,6 @@
         <li class="api-class-tab index"><a href="#index">Index</a></li>
 
             <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
-            <li class="api-class-tab properties"><a href="#properties">Properties</a></li>
     </ul>
 
     <div>
@@ -187,28 +189,14 @@
                 <div class="index-section methods">
                     <h3>Methods</h3>
 
-                    <ul class="index-list methods">
-                            <li class="index-item method">
-                                <a href="#method_close">close</a>
-
-                            </li>
-                            <li class="index-item method">
-                                <a href="#method_send">send</a>
+                    <ul class="index-list methods extends">
+                            <li class="index-item method inherited">
+                                <a href="#method_getSession">getSession</a>
 
                             </li>
                     </ul>
                 </div>
 
-                <div class="index-section properties">
-                    <h3>Properties</h3>
-
-                    <ul class="index-list properties">
-                            <li class="index-item property">
-                                <a href="#property_constructs">constructs</a>
-
-                            </li>
-                    </ul>
-                </div>
 
 
         </div>
@@ -216,47 +204,20 @@
             <div id="methods" class="api-class-tabpanel">
                 <h2 class="off-left">Methods</h2>
 
-<div id="method_close" class="method item">
-    <h3 class="name"><code>close</code></h3>
-
-        <span class="paren">()</span>
-
-
-
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/app_client_index.js.html#l101"><code>app\client\index.js:101</code></a>
-        </p>
-
-
-
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-
-
-
-</div>
-<div id="method_send" class="method item">
-    <h3 class="name"><code>send</code></h3>
+<div id="method_getSession" class="method item inherited">
+    <h3 class="name"><code>getSession</code></h3>
 
         <div class="args">
             <span class="paren">(</span><ul class="args-list inline commas">
                 <li class="arg">
-                        <code>data</code>
+                        <code>req</code>
                 </li>
             </ul><span class="paren">)</span>
         </div>
 
+        <span class="returns-inline">
+            <span class="type">Promise | <a href="../classes/Session.html" class="crosslink">Session</a></span>
+        </span>
 
 
 
@@ -265,9 +226,9 @@
 
 
     <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/app_client_index.js.html#l29"><code>app\client\index.js:29</code></a>
+                <p>Inherited from
+                <a href="../classes/SessionHandler.html#method_getSession">SessionHandler</a>:
+        <a href="../files/app_authorization_session-handler.js.html#l18"><code>app\authorization\session-handler.js:18</code></a>
         </p>
 
 
@@ -283,52 +244,32 @@
 
             <ul class="params-list">
                 <li class="param">
-                        <code class="param-name">data</code>
-                        <span class="type">Object | Array</span>
+                        <code class="param-name">req</code>
+                        <span class="type">ExpressRequest</span>
 
 
                     <div class="param-description">
-                        <p>Object to send</p>
-
+                        The incoming request to identify
                     </div>
 
                 </li>
             </ul>
         </div>
 
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Promise | <a href="../classes/Session.html" class="crosslink">Session</a></span>:
+                    Returns a Promise that fulfills with a Session
+ 	OBject
+            </div>
+        </div>
 
 
 </div>
             </div>
 
-            <div id="properties" class="api-class-tabpanel">
-                <h2 class="off-left">Properties</h2>
-
-<div id="property_constructs" class="property item">
-    <h3 class="name"><code>constructs</code></h3>
-    <span class="type">Object</span>
-
-
-
-
-
-    <div class="meta">
-                <p>
-                Defined in
-        <a href="../files/app_client_index.js.html#l22"><code>app\client\index.js:22</code></a>
-        </p>
-
-
-    </div>
-
-    <div class="description">
-        
-    </div>
-
-
-
-</div>
-            </div>
 
 
     </div>

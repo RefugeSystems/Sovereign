@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>app\sovereign.js - rs-sovereign</title>
+    <title>SessionHandler - rs-sovereign</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -86,146 +86,184 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: app\sovereign.js</h1>
+<h1>SessionHandler Class</h1>
+<div class="box meta">
 
-<div class="file">
-    <pre class="code prettyprint linenums">
 
-//var Synthesis = require(&quot;rs-synthesis&quot;);
-//var Random = require(&quot;rs-random&quot;);
-var Synthesis = require(&quot;../../Synthesis/&quot;);
-var Random = require(&quot;../../Random/&quot;);
-var Client = require(&quot;./client&quot;);
-var Package = require(&quot;../package.json&quot;);
+        <div class="foundat">
+            Defined in: <a href="../files/app_authorization_session-handler.js.html#l2"><code>app\authorization\session-handler.js:2</code></a>
+        </div>
 
-/**
- * 
- * @class Sovereign
- * @constructor
- * @param {Object} Configuration
- */
-module.exports = function(Configuration) {
-	var sovereign = this;
-	
-	var start = Date.now();
-	var general = this.general = new Synthesis(Configuration.synthesis);
-	general.setMaxListeners(2);
-	
-	var clients = {};
-	
-	this.client = function(connection) {
-		var client = new Client(Random.identifier(&quot;client&quot;, 10, 32), connection, sovereign);
-		clients[client.id.code] = client;
-		client.on(&quot;create&quot;, clientCreate);
-		client.on(&quot;repeat&quot;, clientRepeat);
-		client.on(&quot;close&quot;, this.disconnect);
-		console.log(&quot;Client Created: &quot; + client.id.code);
-	};
-	
-	
-	this.ping = function(ball) {
-		var x, notify = Object.keys(clients);
-		for(x=0; x&lt;notify.length; x++) {
-			console.log(&quot;Pong to &quot; + notify[x]);
-			clients[notify[x]].send(&quot;pong&quot;, ball);
-		}
-	};
-	
-	
-	
-	this.constructs = function(constructs) {
-		console.log(&quot;General Construct: &quot;, constructs);
-		if(!constructs) {
-			throw new Error(&quot;No Constructs passed&quot;);
-		}
-		return general.retrieveConstructs(constructs);
-	};
-	
-	
-	this.disconnect = function(client) {
-		delete(clients[client.id.code]);
-		console.log(&quot;Client Disconnected: &quot; + client.id.code + (client.closure.message?&quot; - For Cause: &quot; + client.closure.message:&quot;&quot;));
-	};
-	
-	
-	var events = {
-		&quot;general&quot;: [&quot;general&quot;,
-			&quot;resource:create&quot;,
-			&quot;resource:repeat&quot;,
-			&quot;resource:remove&quot;,
-			&quot;relation:create&quot;,
-			&quot;relation:repeat&quot;,
-			&quot;relation:remove&quot;]
-	};
-	
-	
-	this.status = function() {
-		var e, synthesis = {
-			&quot;general&quot;: {
-				&quot;listeners&quot;: {
-				}
-			}
-		};
-		
-		for(e=0; e&lt;events.length; e++) {
-			synthesis.general.listeners[events[e]] = general.listenerCount(events[e]);
-		}
-		
-		return {
-			&quot;service&quot;: {
-				&quot;uptime&quot;: Date.now() - start,
-				&quot;version&quot;: Package.version
-			},
-			&quot;construct&quot;: synthesis
-		};
-	};
-	
-	
-	var clientCreate = function(event) {
-		var x;
-		/* TODO : Wait for Resources to create to get IDs and then fill in
-		 * the IDs by name in relations BEFORE passing relations for creation
-		 * so that we prioritize filling in ambiguous names with resources that
-		 * were identified in this event to fulfill cases of ambiguous names
-		 * with some priority.
-		 * 
-		 * Otherwise the creation process will find the first resource of the
-		 * given name for relationships where no ID is specified (See &quot;soruceName&quot;
-		 * and &quot;targetName&quot;).
-		 */
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Create Resource: &quot;, JSON.stringify(event.resources[x], null, 4));
-				general.createResource(event.resources[x]);
-			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
-		}
-	};
-	
-	
-	var clientRepeat = function(event) {
-		var x;
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Emit Resource: &quot; + event.resources[x]);
-				general.repeatResource(event.resources[x]);
-			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
-		}
-	};
-};
+            Module: <a href="../modules/Documentation.html">Documentation</a>
 
-    </pre>
+</div>
+
+
+<div class="box intro">
+    <p>A Session Class Implements the necessary functionality to retrieve a user session and configure
+the permissions for actions accordingly.</p>
+<p>This serves more for documentation for writing a Session Handler than for providing functionality
+at this time.</p>
+
+</div>
+
+    <div class="constructor">
+        <h2>Constructor</h2>
+<div id="method_SessionHandler" class="method item">
+    <h3 class="name"><code>SessionHandler</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>options</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/app_authorization_session-handler.js.html#l2"><code>app\authorization\session-handler.js:2</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">options</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>Passed by the system from Configuration.session</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+    </div>
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+                <div class="index-section methods">
+                    <h3>Methods</h3>
+
+                    <ul class="index-list methods">
+                            <li class="index-item method">
+                                <a href="#method_getSession">getSession</a>
+
+                            </li>
+                    </ul>
+                </div>
+
+
+
+        </div>
+
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
+
+<div id="method_getSession" class="method item">
+    <h3 class="name"><code>getSession</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>req</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Promise | <a href="../classes/Session.html" class="crosslink">Session</a></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/app_authorization_session-handler.js.html#l18"><code>app\authorization\session-handler.js:18</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">req</code>
+                        <span class="type">ExpressRequest</span>
+
+
+                    <div class="param-description">
+                        <p>The incoming request to identify</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Promise | <a href="../classes/Session.html" class="crosslink">Session</a></span>:
+                    <p>Returns a Promise that fulfills with a Session
+OBject</p>
+
+            </div>
+        </div>
+
+
+</div>
+            </div>
+
+
+
+    </div>
 </div>
                     </div>
                 </div>

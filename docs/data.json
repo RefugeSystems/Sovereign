@@ -6,6 +6,51 @@
         "url": "https://github.com/RefugeSystems/sovereign#readme"
     },
     "files": {
+        "app\\authorization\\debug-handler.js": {
+            "name": "app\\authorization\\debug-handler.js",
+            "modules": {},
+            "classes": {
+                "DebugHandler": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\authorization\\fail-handler.js": {
+            "name": "app\\authorization\\fail-handler.js",
+            "modules": {},
+            "classes": {
+                "FailHandler": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\authorization\\rsys-handler.js": {
+            "name": "app\\authorization\\rsys-handler.js",
+            "modules": {},
+            "classes": {
+                "RSysHandler": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\authorization\\session-handler.js": {
+            "name": "app\\authorization\\session-handler.js",
+            "modules": {},
+            "classes": {
+                "SessionHandler": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
+        "app\\authorization\\session.js": {
+            "name": "app\\authorization\\session.js",
+            "modules": {},
+            "classes": {
+                "Session": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        },
         "app\\client\\index.js": {
             "name": "app\\client\\index.js",
             "modules": {},
@@ -53,6 +98,11 @@
             "submodules": {},
             "elements": {},
             "classes": {
+                "DebugHandler": 1,
+                "FailHandler": 1,
+                "RSysHandler": 1,
+                "SessionHandler": 1,
+                "Session": 1,
                 "Client": 1,
                 "Structure": 1
             },
@@ -75,11 +125,112 @@
             "namespaces": {},
             "tag": "module",
             "file": "app\\sovereign.js",
-            "line": 8,
+            "line": 9,
             "description": "Provides a suite of functions for generating random data."
         }
     },
     "classes": {
+        "DebugHandler": {
+            "name": "DebugHandler",
+            "shortname": "DebugHandler",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\authorization\\debug-handler.js",
+            "line": 6,
+            "description": "A special handler that succeeds all requests with a default generic session.\n\n The default generic session has administrative privileges but options can set the authorizations that\n should be established.\n \n The \"name\" for the session is always \"debugging#\" and then the instance number for the session. This is\n constant for log searching.\n\nUseful for development and debugging.\n\nConfiguration: 'debug-handler'",
+            "is_constructor": 1,
+            "extends": "SessionHandler",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "Uses:\n+ display {String} : Display name for the session\n+ username {String} : Username for the session\n+ options.authorizations {Object} : Sets the authorizations for the session, defaults to true",
+                    "type": "Object"
+                }
+            ]
+        },
+        "FailHandler": {
+            "name": "FailHandler",
+            "shortname": "FailHandler",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\authorization\\fail-handler.js",
+            "line": 6,
+            "description": "Special session handler that always fails with an error.\n\nUseful for debugging and development.\n\nConfiguration: 'fail-handler'",
+            "is_constructor": 1,
+            "extends": "SessionHandler",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "Uses:  \n+ options.message {String}: The message to use inside the error",
+                    "type": "Object"
+                }
+            ]
+        },
+        "RSysHandler": {
+            "name": "RSysHandler",
+            "shortname": "RSysHandler",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\authorization\\rsys-handler.js",
+            "line": 6,
+            "description": "Configuration: 'rsys-handler'",
+            "is_constructor": 1,
+            "extends": "SessionHandler",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "Uses:show dbs\n + options.database {String}: The name of the Mongo Database with refuge system general session information. The connection is found off of the system configuration",
+                    "type": "Object"
+                }
+            ]
+        },
+        "SessionHandler": {
+            "name": "SessionHandler",
+            "shortname": "SessionHandler",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\authorization\\session-handler.js",
+            "line": 2,
+            "description": "A Session Class Implements the necessary functionality to retrieve a user session and configure\nthe permissions for actions accordingly.\n\nThis serves more for documentation for writing a Session Handler than for providing functionality\nat this time.",
+            "is_constructor": 1,
+            "abstract": "",
+            "params": [
+                {
+                    "name": "options",
+                    "description": "Passed by the system from Configuration.session",
+                    "type": "Object"
+                }
+            ]
+        },
+        "Session": {
+            "name": "Session",
+            "shortname": "Session",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "module": "Documentation",
+            "file": "app\\authorization\\session.js",
+            "line": 5,
+            "is_constructor": 1
+        },
         "Client": {
             "name": "Client",
             "shortname": "Client",
@@ -151,7 +302,7 @@
             "module": "Utility",
             "namespace": "",
             "file": "app\\sovereign.js",
-            "line": 8,
+            "line": 9,
             "is_constructor": 1,
             "params": [
                 {
@@ -165,8 +316,97 @@
     "elements": {},
     "classitems": [
         {
+            "file": "app\\authorization\\session-handler.js",
+            "line": 18,
+            "itemtype": "method",
+            "name": "getSession",
+            "params": [
+                {
+                    "name": "req",
+                    "description": "The incoming request to identify",
+                    "type": "ExpressRequest"
+                }
+            ],
+            "return": {
+                "description": "Returns a Promise that fulfills with a Session\n \tOBject",
+                "type": "Promise | Session"
+            },
+            "class": "SessionHandler"
+        },
+        {
+            "file": "app\\authorization\\session.js",
+            "line": 19,
+            "description": "Uses keys to maps operation names to secondary Objects that map\nclearance strings to their Integer values for this session.\n\nCurrently a clearance of 0 or undefined yields access denied, while\nany other value for clearance should be considered allowed.\n\nIf authorizations is the literal value \"true\", then the Session is\nconsidered to be allowed to perform all operations without question.",
+            "itemtype": "property",
+            "name": "authorizations",
+            "type": "Object | Boolean",
+            "default": "{}",
+            "class": "Session"
+        },
+        {
+            "file": "app\\authorization\\session.js",
+            "line": 46,
+            "itemtype": "method",
+            "name": "authorization",
+            "params": [
+                {
+                    "name": "opSet",
+                    "description": "Maps operations to access clearance for this session.",
+                    "type": "Object"
+                }
+            ],
+            "class": "Session"
+        },
+        {
+            "file": "app\\authorization\\session.js",
+            "line": 59,
+            "itemtype": "method",
+            "name": "authorized",
+            "params": [
+                {
+                    "name": "operation",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "clearance",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Integer"
+            },
+            "class": "Session"
+        },
+        {
+            "file": "app\\authorization\\session.js",
+            "line": 75,
+            "description": "Used for checking authorization in promise chains where the operation\nand clearance are properties of the object being passed down the chain.",
+            "itemtype": "method",
+            "name": "checkAuthorization",
+            "params": [
+                {
+                    "name": "operation",
+                    "description": "",
+                    "type": "String"
+                },
+                {
+                    "name": "clearance",
+                    "description": "",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "",
+                "type": "Promise"
+            },
+            "class": "Session"
+        },
+        {
             "file": "app\\client\\index.js",
-            "line": 23,
+            "line": 22,
             "itemtype": "property",
             "name": "constructs",
             "type": "Object",
@@ -174,7 +414,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 30,
+            "line": 29,
             "itemtype": "method",
             "name": "send",
             "params": [
@@ -188,7 +428,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 87,
+            "line": 101,
             "itemtype": "method",
             "name": "close",
             "class": "Client"
@@ -357,5 +597,10 @@
             "module": "Utility"
         }
     ],
-    "warnings": []
+    "warnings": [
+        {
+            "message": "unknown tag: abstract",
+            "line": " app\\authorization\\session-handler.js:2"
+        }
+    ]
 }

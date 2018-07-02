@@ -4,6 +4,7 @@
 var Synthesis = require("../../Synthesis/");
 var Random = require("../../Random/");
 var Client = require("./client");
+var Package = require("../package.json");
 
 /**
  * 
@@ -14,17 +15,19 @@ var Client = require("./client");
 module.exports = function(Configuration) {
 	var sovereign = this;
 	
+	var start = Date.now();
 	var general = this.general = new Synthesis(Configuration.synthesis);
+	general.setMaxListeners(2);
 	
 	var clients = {};
 	
 	this.client = function(connection) {
-		var client = Random.string(10) + Date.now();
-		client += Random.string(32 - client.length);
-		client = new Client(client, connection, sovereign);
+		var client = new Client(Random.identifier("client", 10, 32), connection, sovereign);
 		clients[client.id.code] = client;
 		client.on("create", clientCreate);
 		client.on("repeat", clientRepeat);
+		client.on("close", this.disconnect);
+		console.log("Client Created: " + client.id.code);
 	};
 	
 	
@@ -44,6 +47,45 @@ module.exports = function(Configuration) {
 			throw new Error("No Constructs passed");
 		}
 		return general.retrieveConstructs(constructs);
+	};
+	
+	
+	this.disconnect = function(client) {
+		delete(clients[client.id.code]);
+		console.log("Client Disconnected: " + client.id.code + (client.closure.message?" - For Cause: " + client.closure.message:""));
+	};
+	
+	
+	var events = {
+		"general": ["general",
+			"resource:create",
+			"resource:repeat",
+			"resource:remove",
+			"relation:create",
+			"relation:repeat",
+			"relation:remove"]
+	};
+	
+	
+	this.status = function() {
+		var e, synthesis = {
+			"general": {
+				"listeners": {
+				}
+			}
+		};
+		
+		for(e=0; e<events.length; e++) {
+			synthesis.general.listeners[events[e]] = general.listenerCount(events[e]);
+		}
+		
+		return {
+			"service": {
+				"uptime": Date.now() - start,
+				"version": Package.version
+			},
+			"construct": synthesis
+		};
 	};
 	
 	

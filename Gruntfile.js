@@ -206,7 +206,7 @@ module.exports = function(grunt) {
 			"unit-tests": {
 				
 			},
-			"docs":  {
+			"lint":  {
 				"files":  ["app/**/*.js", "client/**/*.js"],
 				"tasks":  ["eslint:app","yuidoc"]
 			}
@@ -380,7 +380,7 @@ module.exports = function(grunt) {
 
 	grunt.initConfig(config);
 	
-	grunt.registerTask("lint", ["eslint:app", "watch:docs"]);
+	grunt.registerTask("lint", ["eslint:app", "watch:lint"]);
 	
 	grunt.registerTask("default", ["lint", "watch"]);
 

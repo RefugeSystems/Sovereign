@@ -34,12 +34,20 @@ module.exports.resolve = function(configuration) {
 				var parse, body, query, params;
 				req._serialized = true;
 				req.rsid = req.rsid || (req.ip + "#" + id++);
-				parse = JSON.stringify(req.body);
-				body = parse.substring(0, 100);
-				parse = JSON.stringify(req.query);
-				query = parse.substring(0, 100);
-				parse = JSON.stringify(req.params);
-				params = parse.substring(0, 100);
+				
+				if(req.body) {
+					parse = JSON.stringify(req.body);
+					body = parse.substring(0, 100);
+				}
+				if(req.params) {
+					parse = JSON.stringify(req.query);
+					query = parse.substring(0, 100);
+				}
+				if(req.params) {
+					parse = JSON.stringify(req.params);
+					params = parse.substring(0, 100);
+				}
+				
 				return {
 					rsid: req.rsid,
 					method: req.method,

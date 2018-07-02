@@ -1,0 +1,8 @@
+{
+	"session": {
+		"-handler": "debug-handler",
+		"handler": "rsys-handler",
+		"database": "tower",
+		"ttl": 0
+	}
+}

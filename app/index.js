@@ -1,5 +1,15 @@
 
+var cookieParser = require("cookie-parser");
+var bodyParser = require("body-parser");
+var express = require("express");
+var WebSocket = require("ws");
+var https = require("https");
+var http = require("http");
+var url = require("url");
+var fs = require("fs");
+
 var Configuration = require("a-configuration");
+
 var StructureRouter = require("./structure/routing");
 var Structure = require("./structure");
 var Sovereign = require("./sovereign");
@@ -45,15 +55,22 @@ Configuration
 	Configuration.synthetic = Configuration.synthetic || {};
 	Configuration.synthetic.general = Configuration.synthetic.general || {};
 	
-	var bodyParser = require("body-parser");
-	var express = require("express");
-	var WebSocket = require("ws");
-	var https = require("https");
-	var http = require("http");
-	var url = require("url");
-	var fs = require("fs");
-
+	Configuration.session = Configuration.session || {};	
+	Configuration.session.handler = Configuration.session.handler || "rsys-handler";
+	if(!Configuration.session.handler.endsWith("-handler") || Configuration.session.handler.indexOf("/") !== -1) {
+		throw new Error("Invalid Session Handler '" + Configuration.session.handler + "': Handlers must end with 'handler' and can only be located in the app/authorization folder or be installed as a node module");
+	}
+	
+	var SessionHandler;
+	try {
+		SessionHandler = require("./authorization/" + Configuration.session.handler + ".js");
+	} catch(tryAsNodeModule) {
+		SessionHandler = require(Configuration.session.handler);
+	}
+	var sessionHandler = new SessionHandler(Configuration.session);
+	
 	var server = express();
+	server.use(cookieParser());
 	server.use(bodyParser.json());
 	server.use(bodyParser.urlencoded({ extended: false }));
 	
@@ -65,9 +82,13 @@ Configuration
 		next();
 	});
 	
-	server.get("/ping", function(req,res) {
+	server.post("/ping", function(req,res) {
 		sovereign.ping(req.body);
 		res.json({"status": 0, "message": "Pinged"});
+	});
+	
+	server.get("/status", function(req,res) {
+		res.json(sovereign.status());
 	});
 	
 	server.use("/structure", StructureRouter);
@@ -95,18 +116,47 @@ Configuration
 		"cert": crt 
 	}, server);
 	
-	var socketserver = new WebSocket.Server({"server": opened});
+	var options = {};
+	options.server = opened;
+	options.verifyClient = function(info, done) {
+		var location = url.parse(info.req.url, true);
+		info.req.query = location.query; // This doesn't appear to be handled by WS
+		info.req.path = location.path;
+		
+		sessionHandler.getSession(info.req)
+		.then(function(session) {
+			if(session) {
+				log.info({"req": info.req, "session": session}, "Websocket accepted");
+				info.req.session = session;
+				done(true);
+			} else {
+				log.warn({"req": info.req}, "Rejected websocket request for lack of session");
+				done(false, 401, "Must be logged in with an active session");
+			}
+		}).catch(function(error) {
+			log.error({"error": error, "stack": error.stack, "req": info.req}, "Failed to find session data for user while verifying websocket client: " + error.message);
+			done(false, 500, "Failed to search for Session information: " + error.message);
+		});
+	};
+	
+	var socketserver = new WebSocket.Server(options);
 	socketserver.on("connection", function(connection, req) {
-		var location = url.parse(req.url, true);
-		if(location.path === "/connect") {
+		if(req.path === "/connect") { // Path & Session set by client verification
+			connection.session = req.session;
 			connection.host = req.ip;
+			
 			if(req.session) {
 				connection.name = req.session.name;
 			} else {
 				connection.name = "no-session";
 			}
+			
 			sovereign.client(connection);
 		}
+	});
+	
+	socketserver.on("error", function(error) {
+		console.log("Socket Server Errored: ", error);
 	});
 	
 	secure.on("error", onError(Configuration.server.https));
@@ -119,3 +169,11 @@ Configuration
 	
 	Structure.defineApp(server);
 });
+
+
+
+
+
+Object.prototype.clone = function() {
+	return JSON.parse(JSON.stringify(this));
+};

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>app\sovereign.js - rs-sovereign</title>
+    <title>app\authorization\debug-handler.js - rs-sovereign</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -86,144 +86,53 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-<h1 class="file-heading">File: app\sovereign.js</h1>
+<h1 class="file-heading">File: app\authorization\debug-handler.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
 
-//var Synthesis = require(&quot;rs-synthesis&quot;);
-//var Random = require(&quot;rs-random&quot;);
-var Synthesis = require(&quot;../../Synthesis/&quot;);
-var Random = require(&quot;../../Random/&quot;);
-var Client = require(&quot;./client&quot;);
-var Package = require(&quot;../package.json&quot;);
+var Configuration = require(&quot;a-configuration&quot;);
+var Session = require(&quot;./session.js&quot;);
+var util = require(&quot;util&quot;);
 
 /**
+ * A special handler that succeeds all requests with a default generic session.
  * 
- * @class Sovereign
- * @constructor
- * @param {Object} Configuration
+ *  The default generic session has administrative privileges but options can set the authorizations that
+ *  should be established.
+ *  
+ *  The &quot;name&quot; for the session is always &quot;debugging#&quot; and then the instance number for the session. This is
+ *  constant for log searching.
+ * 
+ * Useful for development and debugging.
+ * 
+ * Configuration: &#x27;debug-handler&#x27;
+ * @class DebugHandler
+ * @constructor 
+ * @extends SessionHandler
+ * @param {Object} options Uses:
+ * + display {String} : Display name for the session
+ * + username {String} : Username for the session
+ * + options.authorizations {Object} : Sets the authorizations for the session, defaults to true
  */
-module.exports = function(Configuration) {
-	var sovereign = this;
+module.exports = function(options) {
+	options = options || {};
+	var id = 0;
 	
-	var start = Date.now();
-	var general = this.general = new Synthesis(Configuration.synthesis);
-	general.setMaxListeners(2);
-	
-	var clients = {};
-	
-	this.client = function(connection) {
-		var client = new Client(Random.identifier(&quot;client&quot;, 10, 32), connection, sovereign);
-		clients[client.id.code] = client;
-		client.on(&quot;create&quot;, clientCreate);
-		client.on(&quot;repeat&quot;, clientRepeat);
-		client.on(&quot;close&quot;, this.disconnect);
-		console.log(&quot;Client Created: &quot; + client.id.code);
-	};
-	
-	
-	this.ping = function(ball) {
-		var x, notify = Object.keys(clients);
-		for(x=0; x&lt;notify.length; x++) {
-			console.log(&quot;Pong to &quot; + notify[x]);
-			clients[notify[x]].send(&quot;pong&quot;, ball);
-		}
-	};
-	
-	
-	
-	this.constructs = function(constructs) {
-		console.log(&quot;General Construct: &quot;, constructs);
-		if(!constructs) {
-			throw new Error(&quot;No Constructs passed&quot;);
-		}
-		return general.retrieveConstructs(constructs);
-	};
-	
-	
-	this.disconnect = function(client) {
-		delete(clients[client.id.code]);
-		console.log(&quot;Client Disconnected: &quot; + client.id.code + (client.closure.message?&quot; - For Cause: &quot; + client.closure.message:&quot;&quot;));
-	};
-	
-	
-	var events = {
-		&quot;general&quot;: [&quot;general&quot;,
-			&quot;resource:create&quot;,
-			&quot;resource:repeat&quot;,
-			&quot;resource:remove&quot;,
-			&quot;relation:create&quot;,
-			&quot;relation:repeat&quot;,
-			&quot;relation:remove&quot;]
-	};
-	
-	
-	this.status = function() {
-		var e, synthesis = {
-			&quot;general&quot;: {
-				&quot;listeners&quot;: {
-				}
-			}
-		};
-		
-		for(e=0; e&lt;events.length; e++) {
-			synthesis.general.listeners[events[e]] = general.listenerCount(events[e]);
-		}
-		
-		return {
-			&quot;service&quot;: {
-				&quot;uptime&quot;: Date.now() - start,
-				&quot;version&quot;: Package.version
-			},
-			&quot;construct&quot;: synthesis
-		};
-	};
-	
-	
-	var clientCreate = function(event) {
-		var x;
-		/* TODO : Wait for Resources to create to get IDs and then fill in
-		 * the IDs by name in relations BEFORE passing relations for creation
-		 * so that we prioritize filling in ambiguous names with resources that
-		 * were identified in this event to fulfill cases of ambiguous names
-		 * with some priority.
-		 * 
-		 * Otherwise the creation process will find the first resource of the
-		 * given name for relationships where no ID is specified (See &quot;soruceName&quot;
-		 * and &quot;targetName&quot;).
-		 */
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Create Resource: &quot;, JSON.stringify(event.resources[x], null, 4));
-				general.createResource(event.resources[x]);
-			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
-		}
-	};
-	
-	
-	var clientRepeat = function(event) {
-		var x;
-		if(event.resources) {
-			for(x=0; x&lt;event.resources.length; x++) {
-				console.log(&quot;Emit Resource: &quot; + event.resources[x]);
-				general.repeatResource(event.resources[x]);
-			}
-		}
-		if(event.relations) {
-			for(x=0; x&lt;event.relations.length; x++) {
-				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
-			}
-		}
+	this.getSession = function(req) {
+		return new Promise(function(done) {
+			Configuration.systemLog.debug({&quot;req&quot;: req, &quot;sessionHandler&quot;: &quot;debug-handler&quot;}, &quot;Debug handler fulfilled session&quot;);
+			done(new Session({
+				&quot;name&quot;: &quot;debugging#&quot; + id++,
+				&quot;username&quot;: options.username || &quot;debug-mode&quot;,
+				&quot;display&quot;: options.display || &quot;Debug User&quot;,
+				&quot;authorizations&quot;: options.authorizations || true
+			}));
+		});
 	};
 };
+
+util.inherits(module.exports, Session);
 
     </pre>
 </div>

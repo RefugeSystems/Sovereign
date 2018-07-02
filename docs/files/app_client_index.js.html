@@ -39,7 +39,12 @@
                         <div id="api-tabview-panel">
                             <ul id="api-classes" class="apis classes">
                                 <li><a href="../classes/Client.html">Client</a></li>
+                                <li><a href="../classes/DebugHandler.html">DebugHandler</a></li>
+                                <li><a href="../classes/FailHandler.html">FailHandler</a></li>
                                 <li><a href="../classes/Random.html">Random</a></li>
+                                <li><a href="../classes/RSysHandler.html">RSysHandler</a></li>
+                                <li><a href="../classes/Session.html">Session</a></li>
+                                <li><a href="../classes/SessionHandler.html">SessionHandler</a></li>
                                 <li><a href="../classes/Sovereign.html">Sovereign</a></li>
                                 <li><a href="../classes/Structure.html">Structure</a></li>
                             </ul>
@@ -97,7 +102,6 @@ var util = require(&quot;util&quot;);
  * @param {Object} configuration
  */
 module.exports = function(id, connection, sovereign) {
-	console.log(&quot;Create Client&quot;);
 	var client = this;
 	this.id = {
 		&quot;code&quot;: id,
@@ -127,12 +131,12 @@ module.exports = function(id, connection, sovereign) {
 	};
 	
 	
-	sovereign.general.on(&quot;general&quot;, function(event) {
+	var receiveGeneral = function(event) {
 		connection.send(JSON.stringify({
 			&quot;origin&quot;: &quot;general&quot;,
 			&quot;event&quot;: event
 		}));
-	});
+	};
 	
 	
 	connection.on(&quot;message&quot;, function(event) {
@@ -162,13 +166,28 @@ module.exports = function(id, connection, sovereign) {
 	
 	
 	connection.on(&quot;error&quot;, function(event) {
+		console.log(&quot;Client Error: &quot;, event);
 		event = event || {};
-		var error = {};
-
-		error.message = &quot;Connection Error: &quot; + (event.message || &quot;No Message&quot;);
-		error.event = event;
 		
-		client.emit(&quot;error&quot;, error);
+		client.closure = {};
+		client.closure.message = event.message || &quot;No Message&quot;;
+		client.closure.event = event;
+		
+		client.emit(&quot;close&quot;, client);
+		sovereign.general.removeListener(&quot;general&quot;, receiveGeneral);
+	});
+	
+	
+	connection.on(&quot;close&quot;, function(event) {
+		console.log(&quot;Client Closed: &quot;, event);
+		event = event || {};
+		
+		client.closure = {};
+		client.closure.message = event.message;
+		client.closure.event = event;
+		
+		client.emit(&quot;close&quot;, client);
+		sovereign.general.removeListener(&quot;general&quot;, receiveGeneral);
 	});
 	
 	/**
@@ -178,6 +197,9 @@ module.exports = function(id, connection, sovereign) {
 	this.close = function() {
 		
 	};
+	
+	
+	sovereign.general.on(&quot;general&quot;, receiveGeneral);
 };
 
 util.inherits(module.exports, EventEmitter);

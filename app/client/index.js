@@ -10,7 +10,6 @@ var util = require("util");
  * @param {Object} configuration
  */
 module.exports = function(id, connection, sovereign) {
-	console.log("Create Client");
 	var client = this;
 	this.id = {
 		"code": id,
@@ -40,12 +39,12 @@ module.exports = function(id, connection, sovereign) {
 	};
 	
 	
-	sovereign.general.on("general", function(event) {
+	var receiveGeneral = function(event) {
 		connection.send(JSON.stringify({
 			"origin": "general",
 			"event": event
 		}));
-	});
+	};
 	
 	
 	connection.on("message", function(event) {
@@ -75,13 +74,28 @@ module.exports = function(id, connection, sovereign) {
 	
 	
 	connection.on("error", function(event) {
+		console.log("Client Error: ", event);
 		event = event || {};
-		var error = {};
-
-		error.message = "Connection Error: " + (event.message || "No Message");
-		error.event = event;
 		
-		client.emit("error", error);
+		client.closure = {};
+		client.closure.message = event.message || "No Message";
+		client.closure.event = event;
+		
+		client.emit("close", client);
+		sovereign.general.removeListener("general", receiveGeneral);
+	});
+	
+	
+	connection.on("close", function(event) {
+		console.log("Client Closed: ", event);
+		event = event || {};
+		
+		client.closure = {};
+		client.closure.message = event.message;
+		client.closure.event = event;
+		
+		client.emit("close", client);
+		sovereign.general.removeListener("general", receiveGeneral);
 	});
 	
 	/**
@@ -91,6 +105,9 @@ module.exports = function(id, connection, sovereign) {
 	this.close = function() {
 		
 	};
+	
+	
+	sovereign.general.on("general", receiveGeneral);
 };
 
 util.inherits(module.exports, EventEmitter);
