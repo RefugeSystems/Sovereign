@@ -121,7 +121,7 @@ Configuration
 	options.verifyClient = function(info, done) {
 		var location = url.parse(info.req.url, true);
 		info.req.query = location.query; // This doesn't appear to be handled by WS
-		info.req.path = location.path;
+		info.req.path = location.pathname;
 		
 		sessionHandler.getSession(info.req)
 		.then(function(session) {
@@ -169,10 +169,6 @@ Configuration
 	
 	Structure.defineApp(server);
 });
-
-
-
-
 
 Object.prototype.clone = function() {
 	return JSON.parse(JSON.stringify(this));

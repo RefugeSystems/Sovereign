@@ -382,7 +382,7 @@
         },
         {
             "file": "app\\authorization\\session.js",
-            "line": 75,
+            "line": 76,
             "description": "Used for checking authorization in promise chains where the operation\nand clearance are properties of the object being passed down the chain.",
             "itemtype": "method",
             "name": "checkAuthorization",
@@ -406,7 +406,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 22,
+            "line": 23,
             "itemtype": "property",
             "name": "constructs",
             "type": "Object",
@@ -414,7 +414,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 29,
+            "line": 30,
             "itemtype": "method",
             "name": "send",
             "params": [
@@ -428,7 +428,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 101,
+            "line": 102,
             "itemtype": "method",
             "name": "close",
             "class": "Client"

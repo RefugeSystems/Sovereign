@@ -64,11 +64,12 @@ module.exports = function(source) {
 	 * @return {Integer} 
 	 */
 	var authoized = this.authorized = function(operation, clearance) {
-		if(authorizations === true || authorizations[operation] && authorizations[operation][clearance]) {
+		if(authorizations === true) {
+			return 10;
+		} else if(authorizations[operation] && authorizations[operation][clearance]) {
 			var result = parseInt(authorizations[operation][clearance]);
 			return isNaN(result)?0:result;
 		}
-
 		return 0;
 	};
 	

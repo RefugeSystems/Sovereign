@@ -13,6 +13,7 @@ module.exports = function(id, connection, sovereign) {
 	var client = this;
 	this.id = {
 		"code": id,
+		"username": connection.session?connection.session.username:"anonymous",
 		"connection": connection,
 		"stats": {
 			"lag": 0
@@ -50,21 +51,21 @@ module.exports = function(id, connection, sovereign) {
 	connection.on("message", function(event) {
 		try {
 			event = JSON.parse(event);
-			console.log("Message Recevied");
-			if(event && event.key) {
+			console.log("Message Recevied: ", event);
+			if(event && event.data && event.data.key) {
 				if(event.sent) {
 					event.delay = Date.now() - event.sent;
 					client.id.stats.lag = client.id.stats.lag * 2 + event.delay;
 					client.id.stats.lag /= 2;
 				}
 				
-				switch(event.key) {
+				switch(event.data.key) {
 					case "identity":
 						client.send(client.id);
 						break;
 					default:
-						console.log("Message: " + JSON.stringify(event, null, 4));
-						client.emit(event.key, event);
+						console.log("Message: " + JSON.stringify(event.data, null, 4));
+						client.emit(event.data.key, event.data);
 				}
 			}
 		} catch(exception) {
