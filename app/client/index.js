@@ -30,6 +30,7 @@ module.exports = function(id, connection, sovereign) {
 	/**
 	 * 
 	 * @method send
+	 * @param {String} key Event key for this data
 	 * @param {Object | Array} data Object to send
 	 */
 	this.send = function(key, data) {
@@ -59,6 +60,7 @@ module.exports = function(id, connection, sovereign) {
 					client.id.stats.lag /= 2;
 				}
 				
+				event.data.clientCode = client.id.code;
 				switch(event.data.key) {
 					case "identity":
 						client.send(client.id);

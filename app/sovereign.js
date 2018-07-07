@@ -104,15 +104,75 @@ module.exports = function(Configuration) {
 		if(event.resources) {
 			for(x=0; x<event.resources.length; x++) {
 				console.log("Create Resource: ", JSON.stringify(event.resources[x], null, 4));
+				event.resources[x].id = Random.identifier("resource", 10, 32);
 				general.createResource(event.resources[x]);
 			}
 		}
 		if(event.relations) {
 			for(x=0; x<event.relations.length; x++) {
 				console.log("Create Relation: ", JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
+
+				event.relations[x].id = Random.identifier("relation", 10, 32);
+				negotiateNaming(event.relations[x])
+				.then(general.createRelation)
+				.catch(faultPromised(event.clientCode, "relation", event.relations[x]));
 			}
 		}
+	};
+	
+	/* Handles translating sourceName and targetName to source and target
+	 * 
+	 */
+	var negotiateNaming = function(relation) {
+		return new Promise(function(done, fail) {
+			var names = [];
+			if(relation.sourceName) {
+				names.push(relation.sourceName);
+			}
+			if(relation.targetName) {
+				names.push(relation.targetName);
+			}
+			if(names.length) {
+				general.gatherNamed(names)
+				.then(function(map) {
+					if(relation.sourceName) {
+						relation.source = map[relation.sourceName];
+						delete(relation.sourceName);
+						if(!relation.source) {
+							throw new Error("Named source was not found");
+						}
+						relation.source = relation.source.id;
+					}
+					if(relation.targetName) {
+						relation.target = map[relation.targetName];
+						delete(relation.targetName);
+						if(!relation.target) {
+							throw new Error("Named target was not found");
+						}
+						relation.target = relation.target.id;
+					}
+					console.log("Named Relation: " + JSON.stringify(relation, null, 4));
+					done(relation);
+				})
+				.catch(fail);
+			} else {
+				done(relation);
+			}
+		});
+	};
+	
+	var faultPromised = function(clientCode, key, object) {
+		return function(error) {
+			var message = {
+				"message": "Error Encountered: " + error.message,
+				"stack": error.stack, // TODO: Remove for V1 and incorporate permissions for V1.5
+			};
+			
+			message[key] = object;
+			message.cause = object;
+			
+			clients[clientCode].send("error", message);
+		};
 	};
 	
 	

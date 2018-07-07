@@ -196,15 +196,75 @@ module.exports = function(Configuration) {
 		if(event.resources) {
 			for(x=0; x&lt;event.resources.length; x++) {
 				console.log(&quot;Create Resource: &quot;, JSON.stringify(event.resources[x], null, 4));
+				event.resources[x].id = Random.identifier(&quot;resource&quot;, 10, 32);
 				general.createResource(event.resources[x]);
 			}
 		}
 		if(event.relations) {
 			for(x=0; x&lt;event.relations.length; x++) {
 				console.log(&quot;Create Relation: &quot;, JSON.stringify(event.relations[x], null, 4));
-				general.createRelation(event.relations[x]);
+
+				event.relations[x].id = Random.identifier(&quot;relation&quot;, 10, 32);
+				negotiateNaming(event.relations[x])
+				.then(general.createRelation)
+				.catch(faultPromised(event.clientCode, &quot;relation&quot;, event.relations[x]));
 			}
 		}
+	};
+	
+	/* Handles translating sourceName and targetName to source and target
+	 * 
+	 */
+	var negotiateNaming = function(relation) {
+		return new Promise(function(done, fail) {
+			var names = [];
+			if(relation.sourceName) {
+				names.push(relation.sourceName);
+			}
+			if(relation.targetName) {
+				names.push(relation.targetName);
+			}
+			if(names.length) {
+				general.gatherNamed(names)
+				.then(function(map) {
+					if(relation.sourceName) {
+						relation.source = map[relation.sourceName];
+						delete(relation.sourceName);
+						if(!relation.source) {
+							throw new Error(&quot;Named source was not found&quot;);
+						}
+						relation.source = relation.source.id;
+					}
+					if(relation.targetName) {
+						relation.target = map[relation.targetName];
+						delete(relation.targetName);
+						if(!relation.target) {
+							throw new Error(&quot;Named target was not found&quot;);
+						}
+						relation.target = relation.target.id;
+					}
+					console.log(&quot;Named Relation: &quot; + JSON.stringify(relation, null, 4));
+					done(relation);
+				})
+				.catch(fail);
+			} else {
+				done(relation);
+			}
+		});
+	};
+	
+	var faultPromised = function(clientCode, key, object) {
+		return function(error) {
+			var message = {
+				&quot;message&quot;: &quot;Error Encountered: &quot; + error.message,
+				&quot;stack&quot;: error.stack, // TODO: Remove for V1 and incorporate permissions for V1.5
+			};
+			
+			message[key] = object;
+			message.cause = object;
+			
+			clients[clientCode].send(&quot;error&quot;, message);
+		};
 	};
 	
 	

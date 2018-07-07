@@ -419,6 +419,11 @@
             "name": "send",
             "params": [
                 {
+                    "name": "key",
+                    "description": "Event key for this data",
+                    "type": "String"
+                },
+                {
                     "name": "data",
                     "description": "Object to send",
                     "type": "Object | Array"
@@ -428,7 +433,7 @@
         },
         {
             "file": "app\\client\\index.js",
-            "line": 102,
+            "line": 104,
             "itemtype": "method",
             "name": "close",
             "class": "Client"
