@@ -17,7 +17,7 @@ module.exports = function(Configuration) {
 	
 	var start = Date.now();
 	var general = this.general = new Synthesis(Configuration.synthesis);
-	general.setMaxListeners(2);
+	general.setMaxListeners(0);
 	
 	var clients = {};
 	

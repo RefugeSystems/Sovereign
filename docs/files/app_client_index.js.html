@@ -103,6 +103,7 @@ var util = require(&quot;util&quot;);
  */
 module.exports = function(id, connection, sovereign) {
 	var client = this;
+	this.setMaxListeners(5);
 	this.id = {
 		&quot;code&quot;: id,
 		&quot;username&quot;: connection.session?connection.session.username:&quot;anonymous&quot;,
