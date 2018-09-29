@@ -113,7 +113,7 @@ Configuration
 	var opened = http.createServer(server);
 	var secure = https.createServer({
 		"key": key,
-		"cert": crt 
+		"cert": crt
 	}, server);
 	
 	var options = {};

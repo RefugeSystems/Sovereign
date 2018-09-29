@@ -7,6 +7,7 @@ module.exports.resolve = function(configuration) {
 	return new Promise(function(done, fail) {
 		setTimeout(function() {
 			var url = configuration.mongo.url || ("mongodb://" + configuration.mongo.host + (configuration.mongo.port?":" + configuration.mongo.port:""));
+			console.log("Mongo URL: " + url);
 			var finish = function(err, connection) {
 				if(err) {
 					fail(err);
@@ -23,6 +24,14 @@ module.exports.resolve = function(configuration) {
 						connected.mongo.databases.forEach(function(db) {
 							console.log("Connected DB: " + db);
 							connections[db] = connection.db(db);
+							
+//							connections[db]
+//							.then(function(conn) {
+//								console.log(db + " connected");
+//							})
+//							.catch(function(err) {
+//								console.log(db + " failed: ", err);
+//							});
 						});
 					}
 					connected.mongo.db = connections;

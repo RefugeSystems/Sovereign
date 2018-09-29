@@ -1,6 +1,6 @@
 
 var Configuration = require("a-configuration");
-var Session = require("./session.js");
+var Session = require("../models/session.js");
 var util = require("util");
 
 /**
@@ -65,5 +65,3 @@ module.exports = function(options) {
 		});
 	};
 };
-
-util.inherits(module.exports, Session);
